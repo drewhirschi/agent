@@ -1,30 +1,43 @@
-# AI Developer Agent
+# AI Developer Agent - Monorepo
 
-A LangGraph-powered agent that can explore the `servers/` directory, discover functions, write TypeScript code, and execute it using bun.
+A LangGraph-powered agent with a Next.js client and Express server, organized as a monorepo.
 
-## Features
+## 📁 Project Structure
 
-- **LangGraph Integration**: Full visibility into agent operations and LLM calls
-- **Model Selection**: Choose between Claude Sonnet 4.5 (intelligent) or Haiku 4.5 (fast)
-- **Multi-turn Execution**: Up to 20 turns per conversation
-- **File Exploration**: Discover available server functions
-- **Code Generation**: Write TypeScript files that import and use server functions
-- **Code Execution**: Run generated code using bun
-- **Error Recovery**: Agent can see errors and fix code automatically
+```
+agent/
+├── apps/
+│   ├── client/          # Next.js frontend application
+│   └── server/          # Express backend server
+├── packages/
+│   └── shared/          # Shared utilities and types
+├── scripts/             # Build and development scripts
+└── package.json         # Root workspace configuration
+```
 
-## Setup
+## 🚀 Quick Start
 
-1. Install dependencies:
+### Prerequisites
+
+- [Bun](https://bun.sh/) installed on your system
+
+### Installation
+
+1. Install dependencies for all workspaces:
 ```bash
 bun install
 ```
 
-2. Create `.env.local` file with your API keys:
+2. Set up environment variables:
 ```bash
-cp .env.example .env.local
+# Copy the template for client
+cp apps/client/env.template apps/client/.env.local
+
+# Create server env file
+cp apps/server/.env.example apps/server/.env
 ```
 
-Then edit `.env.local` and add:
+3. Add your API keys to `apps/client/.env.local`:
 ```bash
 # Required
 ANTHROPIC_API_KEY=your_anthropic_key_here
@@ -35,81 +48,141 @@ LANGCHAIN_API_KEY=your_langsmith_key_here
 LANGCHAIN_PROJECT=agent-dev
 ```
 
-**Get LangSmith API Key:**
-- Sign up at [https://smith.langchain.com/](https://smith.langchain.com/)
-- Free tier includes 5,000 traces/month
-- Navigate to Settings → API Keys
-- Create a new API key
+### Development
 
-3. Run the development server:
+Run both client and server in development mode:
 ```bash
 bun run dev
 ```
 
-The app will be available at [http://localhost:3001](http://localhost:3001).
+Or run them individually:
+```bash
+# Client only (Next.js on port 3001)
+bun run dev:client
 
-### Model Selection
+# Server only (Express on port 3002)
+bun run dev:server
+```
 
-Use the dropdown in the header to switch between models:
+### Building
 
-- **Sonnet 4.5** - More intelligent, better for complex reasoning and code generation
-- **Haiku 4.5** - Faster responses, great for simple tasks and quick iterations
+Build all applications:
+```bash
+bun run build
+```
 
-The model selection is applied per-request, so you can switch between them at any time!
+Or build individually:
+```bash
+bun run build:client
+bun run build:server
+```
 
-### LangSmith Dashboard
+## 📦 Workspaces
 
-Once configured, visit [https://smith.langchain.com/](https://smith.langchain.com/) to see:
-- Real-time trace visualization
-- Token usage and costs
-- Latency metrics
-- Error tracking
-- Shareable trace links
+### Client (`apps/client`)
 
-## How It Works
+Next.js 16 application with:
+- **LangGraph Integration**: Full visibility into agent operations
+- **Model Selection**: Claude Sonnet 4.5 or Haiku 4.5
+- **Multi-turn Execution**: Up to 20 turns per conversation
+- **Modern UI**: Radix UI components with Tailwind CSS
+
+**Available at**: [http://localhost:3001](http://localhost:3001)
+
+See [apps/client/README.md](apps/client/README.md) for more details.
+
+### Server (`apps/server`)
+
+Express server with:
+- RESTful API endpoints
+- CORS enabled for client communication
+- TypeScript with strict mode
+- Hot reload in development
+
+**Available at**: [http://localhost:3002](http://localhost:3002)
+
+API Endpoints:
+- `GET /health` - Health check
+- `GET /api/hello` - Test endpoint
+- `POST /api/data` - Example POST handler
+
+### Shared (`packages/shared`)
+
+Common utilities and types used across client and server:
+- Shared TypeScript types
+- Utility functions
+- API response helpers
+
+## 🛠️ Available Scripts
+
+From the root directory:
+
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Run all apps in development mode |
+| `bun run dev:client` | Run only the client |
+| `bun run dev:server` | Run only the server |
+| `bun run build` | Build all apps |
+| `bun run build:client` | Build only the client |
+| `bun run build:server` | Build only the server |
+| `bun run lint` | Lint all workspaces |
+| `bun run format` | Format client code |
+
+## 🏗️ Adding Dependencies
+
+### Workspace-specific dependency:
+```bash
+# For client
+cd apps/client && bun add package-name
+
+# For server
+cd apps/server && bun add package-name
+
+# For shared
+cd packages/shared && bun add package-name
+```
+
+### Root-level dependency (dev tools):
+```bash
+bun add -D package-name
+```
+
+## 📝 Agent Features
 
 The agent has access to 5 tools:
 
 1. **listFiles** - List files and directories in the `servers/` folder
-2. **analyzeFunctions** - Parse TypeScript files to extract function definitions, parameters, return types, and TSDoc/JSDoc documentation (fast!)
-3. **readFile** - Read full file contents (use only when you need implementation details)
+2. **analyzeFunctions** - Parse TypeScript files to extract function signatures and docs
+3. **readFile** - Read full file contents
 4. **writeCode** - Write TypeScript code to the `actions/` directory
-5. **executeCommand** - Execute shell commands (primarily for running generated code with bun)
+5. **executeCommand** - Execute shell commands
 
 ### Example Workflow
 
 User: "Get the weather for Stockholm"
 
 The agent will:
-1. List files in `/workspaces/ai-sdk-tools/servers/weather-channel/`
-2. **Analyze** `get-weather.ts` to extract the function signature and documentation
-   ```typescript
-   {
-     name: "getWeather",
-     parameters: [
-       { name: "location", type: "WeatherLocation | string", optional: false }
-     ],
-     returnType: "WeatherDetails",
-     description: "Mock function to get weather details for a given location"
-   }
-   ```
-3. Write a TypeScript file that imports and calls `getWeather("Stockholm")`
-4. Execute the file with `bun run`
-5. Return the weather data to the user
+1. List files in the weather-channel server directory
+2. Analyze function signatures
+3. Generate TypeScript code
+4. Execute and return results
 
-**Why analyzeFunctions is better than readFile:**
-- ⚡ **Much faster** - Only parses function signatures, not the entire file
-- 📝 **Structured data** - Returns typed JSON with parameters, types, and docs
-- 🎯 **Focused** - Agent gets exactly what it needs to understand how to call the function
+## 🔧 Tech Stack
 
-## Architecture
+- **Monorepo**: Bun workspaces
+- **Client**: Next.js 16, React 19, Tailwind CSS
+- **Server**: Express, TypeScript
+- **Agent**: LangGraph, Claude 4.5 (Anthropic)
+- **Runtime**: Bun
+- **Linting**: Biome
 
-- **LangGraph**: Manages agent workflow and provides full observability
-- **Claude 4.5 Sonnet**: Powers the agent's reasoning and code generation
-- **Next.js 16**: Frontend and API routes
-- **Bun**: Fast TypeScript execution
+## 📚 Learn More
 
-## Generated Files
+- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Bun Documentation](https://bun.sh/docs)
+- [Anthropic API](https://docs.anthropic.com/)
 
-All generated code is saved to `/workspaces/ai-sdk-tools/actions/` with timestamped filenames (e.g., `1699564789-weather-check.ts`). These files are gitignored.
+## 🤝 Contributing
 
+Generated files are saved to `apps/client/actions/` with timestamped filenames and are gitignored.

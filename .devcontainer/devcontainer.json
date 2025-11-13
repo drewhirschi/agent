@@ -1,7 +1,7 @@
 {
   "name": "AI SDK Tools",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-  
+
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -20,7 +20,8 @@
         "bradlc.vscode-tailwindcss",
         "biomejs.biome",
         "oven.bun-vscode",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "tal7aouy.icons"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -36,15 +37,16 @@
   },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  
-  "forwardPorts": [
-    3000,
-    6379
-  ],
-  
+
+  "forwardPorts": [3000, 3001, 6379],
+
   "portsAttributes": {
     "3000": {
-      "label": "Example App",
+      "label": "Client App",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Server App",
       "onAutoForward": "notify"
     },
     "6379": {
@@ -59,4 +61,3 @@
 
   "remoteUser": "node"
 }
-
